@@ -1,16 +1,25 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apiGateway from 'aws-cdk-lib/aws-apigateway';
 
 export class LottostatsStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    const demoHandler = new nodejs.NodejsFunction(this, 'demo-lambda', {
+      functionName: 'lottostats-demo-lambda',
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: 'src/lambda.ts',
+    });
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'LottostatsQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const api = new apiGateway.RestApi(this, 'lottostats', {
+      restApiName: 'LottoStats',
+      description: 'API for LottoStats',
+    });
+
+    const demoIntegration = new apiGateway.LambdaIntegration(demoHandler);
+    api.root.addMethod('GET', demoIntegration);
   }
 }
